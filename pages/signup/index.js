@@ -31,7 +31,7 @@ function Index() {
           setEmail("")
           setUsername("")
           setPassword("")
-          route.replace("/dashboard")
+          route.replace("/todos")
         })
       }else if(res.status==422){
          Swal.fire({

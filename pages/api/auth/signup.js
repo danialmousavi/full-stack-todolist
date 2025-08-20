@@ -37,8 +37,3 @@ const handler=async(req,res)=>{
     }
 }
 export default handler
-
-        //is user exist ✔️
-        //hash password
-        //generate token
-        //create✔️
