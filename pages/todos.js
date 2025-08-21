@@ -49,6 +49,25 @@ function Todolist({ user, todos }) {
     }
     setTodo("")
   };
+  //delete todo
+  const handleDeleteTodo=async(id)=>{
+    console.log(id);
+    
+    const res=await fetch(`/api/todos/${id}`,{
+      method:"DELETE",
+      // headers:{
+      //   "Content-Type":"application/json"
+      // },
+    })
+    if(res.status==200){
+      getAllTodos();
+      Swal.fire({
+        title:"todo deleted successfully",
+        icon:"success"
+      })
+    }
+    
+  }
   return (
     <>
       <h1>Next-Todos</h1>
@@ -111,7 +130,7 @@ function Todolist({ user, todos }) {
                   <div className="list">
                     <p>{todo.title}</p>
                   </div>
-                  <span className="delete">
+                  <span className="delete" onClick={()=>handleDeleteTodo(todo._id)}>
                     <FontAwesomeIcon icon={faTrash} />
                   </span>
                 </li>
