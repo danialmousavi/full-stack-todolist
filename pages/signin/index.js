@@ -27,7 +27,7 @@ function Index() {
       }).then(()=>{
         setIdentifier("");
         setPassword("");
-        route.replace("/dashboard")
+        route.replace("/todos")
       })
     }else if(res.status==402){
       Swal.fire({

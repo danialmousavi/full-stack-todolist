@@ -21,7 +21,7 @@ const handler = async (req, res) => {
 
     
   if (req.method == "GET") {
-    const todos=await todoModel.findOne({user:user._id})
+    const todos=await todoModel.find({user:user._id})
     return res.status(200).json({ todos });
 
   } else if (req.method == "POST") {
