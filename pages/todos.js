@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 config.autoAddCss = false;
@@ -9,31 +9,39 @@ import { verifyToken } from "@/utils/auth";
 import userModel from "@/models/User";
 import todoModel from "@/models/Todo";
 import connectDB from "@/configs/db";
+import { useRouter } from "next/router";
 
 function Todolist({ user, todos }) {
   const [IsShowInput, setIsShowInput] = useState(false);
   const [todo, setTodo] = useState("");
   const [allTodos, setAllTodos] = useState([...todos]);
+  const route = useRouter();
+
+  // گرفتن همه تودوها از سرور (برای ریل‌تایم شدن)
+  const getAllTodos = async () => {
+    const res = await fetch("/api/todos");
+    if (res.status === 200) {
+      const data = await res.json();
+      setAllTodos(data.todos);
+    }
+  };
 
   // اضافه کردن تودو
   const addTodo = async (e) => {
     e.preventDefault();
     const res = await fetch("/api/todos", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: todo, isCompleted: false }),
     });
 
     if (res.status == 201) {
-      const newTodo = await res.json();
-      setAllTodos((prev) => [...prev, newTodo.todo]);
-
       Swal.fire({
         title: "GREAT",
         text: "todo created successfully",
         icon: "success",
+      }).then(() => {
+        getAllTodos(); // دوباره بگیر
       });
     } else {
       Swal.fire({
@@ -46,44 +54,73 @@ function Todolist({ user, todos }) {
   };
 
   // حذف تودو
-  const handleDeleteTodo = async (id) => {
-    const res = await fetch(`/api/todos/${id}`, {
-      method: "DELETE",
+const handleDeleteTodo = async (id) => {
+  const res = await fetch(`/api/todos/${id}`, { method: "DELETE" });
+
+  if (res.status == 200) {
+    setAllTodos((prev) => prev.filter((t) => t._id !== id));
+
+    Swal.fire({
+      title: "todo deleted successfully",
+      icon: "success",
     });
+  } else {
+    Swal.fire({
+      title: "OOPS",
+      text: "sth went wrong while deleting",
+      icon: "error",
+    });
+  }
+};
 
+  // تغییر وضعیت انجام/انجام‌نشده
+ const handleToggleComplete = async (id, currentStatus) => {
+  const res = await fetch(`/api/todos/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isCompleted: !currentStatus }),
+  });
+
+  if (res.status === 200) {
+    setAllTodos((prev) =>
+      prev.map((t) =>
+        t._id === id ? { ...t, isCompleted: !currentStatus } : t
+      )
+    );
+  } else {
+    Swal.fire({
+      title: "OOPS",
+      text: "sth went wrong while updating todo",
+      icon: "error",
+    });
+  }
+};
+
+  // خروج کاربر
+  const logOutFunc = async () => {
+    const res = await fetch("/api/auth/signout");
     if (res.status == 200) {
-      setAllTodos((prev) => prev.filter((t) => t._id !== id));
-
       Swal.fire({
-        title: "todo deleted successfully",
+        title: "See you later",
         icon: "success",
+      }).then(() => {
+        route.replace("/signin");
       });
     }
   };
 
-  // تغییر وضعیت انجام/انجام‌نشده
-  const handleToggleComplete = async (id, currentStatus) => {
-    const res = await fetch(`/api/todos/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ isCompleted: !currentStatus }),
+  const handleLogOutUser = async () => {
+    Swal.fire({
+      title: "Logout🥸",
+      text: "Are you sure?",
+      icon: "question",
+      showConfirmButton: true,
+      showCancelButton: true,
+    }).then((res) => {
+      if (res.isConfirmed) {
+        logOutFunc();
+      }
     });
-
-    if (res.status === 200) {
-      setAllTodos((prev) =>
-        prev.map((t) =>
-          t._id === id ? { ...t, isCompleted: !currentStatus } : t
-        )
-      );
-    } else {
-      Swal.fire({
-        title: "OOPS",
-        text: "sth went wrong while updating todo",
-        icon: "error",
-      });
-    }
   };
 
   return (
@@ -95,6 +132,7 @@ function Todolist({ user, todos }) {
       </div>
 
       <div className="container">
+        {/* فرم اضافه کردن تودو */}
         <div
           className="form-container"
           style={IsShowInput ? { display: "block" } : { display: "none" }}
@@ -113,6 +151,7 @@ function Todolist({ user, todos }) {
           </div>
         </div>
 
+        {/* هدر */}
         <div className="head">
           <div className="date">
             <p>
@@ -136,11 +175,12 @@ function Todolist({ user, todos }) {
               />
             </svg>
           </div>
-          <div className="time">
+          <div className="time" onClick={handleLogOutUser}>
             <a href="#">Logout</a>
           </div>
         </div>
 
+        {/* لیست تودوها */}
         <div className="pad">
           <div id="todo">
             <ul id="tasksContainer">
@@ -191,16 +231,12 @@ export async function getServerSideProps(context) {
   const { token } = context.req.cookies;
 
   if (!token) {
-    return {
-      redirect: { destination: "/signin" },
-    };
+    return { redirect: { destination: "/signin" } };
   }
 
   const tokenPayload = verifyToken(token);
   if (!tokenPayload) {
-    return {
-      redirect: { destination: "/signin" },
-    };
+    return { redirect: { destination: "/signin" } };
   }
 
   const user = await userModel.findOne({ email: tokenPayload.email });
