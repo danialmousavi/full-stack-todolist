@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 config.autoAddCss = false;
@@ -13,15 +13,9 @@ import connectDB from "@/configs/db";
 function Todolist({ user, todos }) {
   const [IsShowInput, setIsShowInput] = useState(false);
   const [todo, setTodo] = useState("");
-  const [allTodos,setAllTodos]=useState([...todos])
-  //get todos after adding new todos
-  const getAllTodos = async () => {
-  const res = await fetch("/api/todos");
-  const data=await res.json();
-  console.log(data);
-      setAllTodos(data.todos)      
-  };
-  //add todos
+  const [allTodos, setAllTodos] = useState([...todos]);
+
+  // اضافه کردن تودو
   const addTodo = async (e) => {
     e.preventDefault();
     const res = await fetch("/api/todos", {
@@ -31,14 +25,15 @@ function Todolist({ user, todos }) {
       },
       body: JSON.stringify({ title: todo, isCompleted: false }),
     });
+
     if (res.status == 201) {
+      const newTodo = await res.json();
+      setAllTodos((prev) => [...prev, newTodo.todo]);
+
       Swal.fire({
         title: "GREAT",
         text: "todo created successfully",
         icon: "success",
-      }).then(()=>{
-      getAllTodos();
-
       });
     } else {
       Swal.fire({
@@ -47,27 +42,50 @@ function Todolist({ user, todos }) {
         icon: "error",
       });
     }
-    setTodo("")
+    setTodo("");
   };
-  //delete todo
-  const handleDeleteTodo=async(id)=>{
-    console.log(id);
-    
-    const res=await fetch(`/api/todos/${id}`,{
-      method:"DELETE",
-      // headers:{
-      //   "Content-Type":"application/json"
-      // },
-    })
-    if(res.status==200){
-      getAllTodos();
+
+  // حذف تودو
+  const handleDeleteTodo = async (id) => {
+    const res = await fetch(`/api/todos/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.status == 200) {
+      setAllTodos((prev) => prev.filter((t) => t._id !== id));
+
       Swal.fire({
-        title:"todo deleted successfully",
-        icon:"success"
-      })
+        title: "todo deleted successfully",
+        icon: "success",
+      });
     }
-    
-  }
+  };
+
+  // تغییر وضعیت انجام/انجام‌نشده
+  const handleToggleComplete = async (id, currentStatus) => {
+    const res = await fetch(`/api/todos/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ isCompleted: !currentStatus }),
+    });
+
+    if (res.status === 200) {
+      setAllTodos((prev) =>
+        prev.map((t) =>
+          t._id === id ? { ...t, isCompleted: !currentStatus } : t
+        )
+      );
+    } else {
+      Swal.fire({
+        title: "OOPS",
+        text: "sth went wrong while updating todo",
+        icon: "error",
+      });
+    }
+  };
+
   return (
     <>
       <h1>Next-Todos</h1>
@@ -78,7 +96,7 @@ function Todolist({ user, todos }) {
 
       <div className="container">
         <div
-          className="form-container "
+          className="form-container"
           style={IsShowInput ? { display: "block" } : { display: "none" }}
         >
           <div className="add-form">
@@ -94,9 +112,12 @@ function Todolist({ user, todos }) {
             </button>
           </div>
         </div>
+
         <div className="head">
           <div className="date">
-            <p>{user.firstname}-{user.lastname}</p>
+            <p>
+              {user.firstname} - {user.lastname}
+            </p>
           </div>
           <div className="add" onClick={() => setIsShowInput((prev) => !prev)}>
             <svg
@@ -119,18 +140,37 @@ function Todolist({ user, todos }) {
             <a href="#">Logout</a>
           </div>
         </div>
+
         <div className="pad">
           <div id="todo">
             <ul id="tasksContainer">
               {allTodos.map((todo) => (
                 <li key={todo._id}>
                   <span className="mark">
-                    <input type="checkbox" className="checkbox" />
+                    <input
+                      type="checkbox"
+                      className="checkbox"
+                      checked={todo.isCompleted}
+                      onChange={() =>
+                        handleToggleComplete(todo._id, todo.isCompleted)
+                      }
+                    />
                   </span>
                   <div className="list">
-                    <p>{todo.title}</p>
+                    <p
+                      style={{
+                        textDecoration: todo.isCompleted
+                          ? "line-through"
+                          : "none",
+                      }}
+                    >
+                      {todo.title}
+                    </p>
                   </div>
-                  <span className="delete" onClick={()=>handleDeleteTodo(todo._id)}>
+                  <span
+                    className="delete"
+                    onClick={() => handleDeleteTodo(todo._id)}
+                  >
                     <FontAwesomeIcon icon={faTrash} />
                   </span>
                 </li>
@@ -144,27 +184,27 @@ function Todolist({ user, todos }) {
 }
 
 export default Todolist;
+
+// سمت سرور
 export async function getServerSideProps(context) {
   connectDB();
   const { token } = context.req.cookies;
+
   if (!token) {
     return {
-      redirect: {
-        destination: "/signin",
-      },
+      redirect: { destination: "/signin" },
     };
   }
+
   const tokenPayload = verifyToken(token);
   if (!tokenPayload) {
     return {
-      redirect: {
-        destination: "/signin",
-      },
+      redirect: { destination: "/signin" },
     };
   }
+
   const user = await userModel.findOne({ email: tokenPayload.email });
   const todos = await todoModel.find({ user: user._id });
-  console.log(todos);
 
   return {
     props: {
