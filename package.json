@@ -2,12 +2,11 @@
   "name": "full-stack-todolist",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+"scripts": {
+  "dev": "next dev -H 192.168.1.102",
+  "build": "next build",
+  "start": "next start -H 192.168.1.102"
+},
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
     "@fortawesome/free-solid-svg-icons": "^7.0.0",

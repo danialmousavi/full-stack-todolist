@@ -31,7 +31,7 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 h1 {
-  color: #ef0722;
+  color: #8626e6c8;
   text-align: center;
   font-weight: 700;
   font-size: 72px;
@@ -120,7 +120,10 @@ h3 {
 }
 
 #submit {
-  background-color: #ef0722;
+background: -moz-linear-gradient(left, rgba(106, 17, 203, 0.9) 0%, rgba(183, 33, 255, 0.6) 100%);
+background: -webkit-linear-gradient(left, rgba(106, 17, 203, 0.9) 0%, rgba(183, 33, 255, 0.6) 100%);
+background: linear-gradient(to right, rgba(106, 17, 203, 0.9) 0%, rgba(183, 33, 255, 0.6) 100%);
+
   border: 2px solid transparent;
   color: #ffffff;
   font-size: 18px;
@@ -135,7 +138,7 @@ h3 {
 #submit:hover {
   border: 2px solid #dadada;
   background-color: #fff;
-  color: #ef0722;
+  color: #ffffffcb;
   cursor: pointer;
   transition: 0.3s ease;
 }
@@ -152,11 +155,10 @@ h3 {
 
 .head {
   align-items: center;
+background: -moz-linear-gradient(left, rgba(106, 17, 203, 0.9) 0%, rgba(183, 33, 255, 0.6) 100%);
+background: -webkit-linear-gradient(left, rgba(106, 17, 203, 0.9) 0%, rgba(183, 33, 255, 0.6) 100%);
+background: linear-gradient(to right, rgba(106, 17, 203, 0.9) 0%, rgba(183, 33, 255, 0.6) 100%);
 
-  background: -moz-linear-gradient(left, #ef0722 0%, #f83515 100%);
-  background: -webkit-linear-gradient(left, #ef0722 0%, #f83515 100%);
-  background: #ef0722;
-  background: linear-gradient(to right, #ef0722 0%, #f83515 100%);
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ef0722', endColorstr='#f83515', GradientType=1);
 
   border-top-left-radius: 10px;

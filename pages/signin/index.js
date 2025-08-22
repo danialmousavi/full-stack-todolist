@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -73,6 +74,12 @@ function Index() {
         </div>
 
         <input type="submit" className="register-btn" value="Sign In" onClick={handleLogin}/>
+        <div style={{marginTop:"30px",textAlign:"center"}}>
+          <h5 style={{color:"white"}}>
+            <Link href="/signup">dont have account? sign up now</Link>
+          </h5>
+        </div>
+
       </form>
     </div>
   );
